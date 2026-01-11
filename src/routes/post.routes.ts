@@ -118,4 +118,23 @@ router.delete('/posts/:postId/like', authenticate, async (req: Request, res: Res
     }
 });
 
+// POST /posts/:postId/dislike (Alias for Un-liking)
+router.post('/posts/:postId/dislike', authenticate, async (req: Request, res: Response): Promise<any> => {
+    const currentUser = (req as any).user as User;
+    const postId = req.params.postId;
+
+    try {
+        const post = await Post.findByPk(postId);
+        if (!post) return res.status(404).json({ error: "Post not found" });
+
+        // Remove like
+        await post.removeLikedBy(currentUser);
+
+        return res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Server Error" });
+    }
+});
+
 export default router;

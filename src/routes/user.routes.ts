@@ -3,6 +3,7 @@ import { User } from '../models/user';
 import { Follow } from '../models/follow';
 import { authenticate } from '../middlewares/authenticate';
 import { Op, WhereOptions } from '@sequelize/core';
+import { sequelize } from '../db';
 
 const router = express.Router();
 
@@ -58,7 +59,35 @@ router.get('/people', authenticate, async (req: Request, res: Response): Promise
     console.log(whereClause)
     try {
         const users = await User.findAll({
-            where: whereClause
+            where: whereClause,
+            attributes: {
+                include: [
+                    [
+                        sequelize.literal(`(
+                            SELECT COUNT(*)::int
+                            FROM posts
+                            WHERE posts."userId" = "User"."id"
+                        )`),
+                        'postsCount'
+                    ],
+                    [
+                        sequelize.literal(`(
+                            SELECT COUNT(*)::int
+                            FROM follows
+                            WHERE follows."followingId" = "User"."id"
+                        )`),
+                        'followersCount'
+                    ],
+                    [
+                        sequelize.literal(`(
+                            SELECT COUNT(*)::int
+                            FROM follows
+                            WHERE follows."followerId" = "User"."id"
+                        )`),
+                        'followingCount'
+                    ]
+                ]
+            }
         });
 
         const followings = await Follow.findAll({
