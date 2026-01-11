@@ -55,7 +55,7 @@ router.get('/people', authenticate, async (req: Request, res: Response): Promise
     if (q && q.length > 0) {
         whereClause.displayName = { [Op.iLike]: `%${q}%` };
     }
-
+    console.log(whereClause)
     try {
         const users = await User.findAll({
             where: whereClause

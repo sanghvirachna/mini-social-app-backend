@@ -16,6 +16,7 @@ import {
 } from '@sequelize/core/decorators-legacy';
 import { Post } from './post';
 import { Follow } from './follow';
+import { PostLike } from './PostLike';
 
 @Table({
     tableName: 'users'
@@ -60,4 +61,12 @@ export class User extends Model<InferAttributes<User>, InferCreationAttributes<U
         inverse: { as: 'Following' }
     })
     declare Followers?: User[];
+
+    @BelongsToMany(() => Post, {
+        through: () => PostLike,
+        foreignKey: 'userId',
+        otherKey: 'postId',
+        inverse: { as: 'LikedBy' }
+    })
+    declare LikedPosts?: Post[];
 }

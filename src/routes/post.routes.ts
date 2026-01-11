@@ -50,16 +50,71 @@ router.get('/feed', authenticate, async (req: Request, res: Response) => {
             order: [['createdAt', 'DESC']],
             limit,
             offset,
-            include: [{
-                association: Post.associations.Author,
-                attributes: ['id', 'displayName', 'headline', 'bio']
-            }]
+            include: [
+                {
+                    association: Post.associations.Author,
+                    attributes: ['id', 'displayName', 'headline', 'bio']
+                },
+                {
+                    association: Post.associations.LikedBy,
+                    attributes: ['id', 'displayName']
+                }
+            ]
         });
 
-        res.json(posts);
+        // Add isLiked field
+        const result = posts.map(p => {
+            const json = p.toJSON();
+            const likedBy = json.LikedBy || [];
+            return {
+                ...json,
+                likeCount: likedBy.length,
+                isLiked: likedBy.some((u: any) => u.id === currentUser.id)
+            };
+        });
+
+        res.json(result);
     } catch (err) {
         console.error(err);
         res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// POST /posts/:postId/like
+router.post('/posts/:postId/like', authenticate, async (req: Request, res: Response): Promise<any> => {
+    const currentUser = (req as any).user as User;
+    const postId = req.params.postId;
+
+    try {
+        const post = await Post.findByPk(postId);
+        if (!post) return res.status(404).json({ error: "Post not found" });
+
+        // Add like
+        await post.addLikedBy(currentUser);
+
+        return res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Server Error" });
+    }
+});
+
+// DELETE /posts/:postId/like
+router.delete('/posts/:postId/like', authenticate, async (req: Request, res: Response): Promise<any> => {
+    const currentUser = (req as any).user as User;
+    const postId = req.params.postId;
+
+    try {
+        const post = await Post.findByPk(postId);
+        if (!post) return res.status(404).json({ error: "Post not found" });
+
+        // Remove like
+        await post.removeLikedBy(currentUser);
+
+        return res.json({ success: true });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: "Server Error" });
     }
 });
 

@@ -4,13 +4,15 @@ import * as dotenv from "dotenv";
 import { User } from "./models/user";
 import { Post } from "./models/post";
 import { Follow } from "./models/follow";
+import { PostLike } from "./models/PostLike";
 
 dotenv.config();
 
 const models = {
     User,
     Post,
-    Follow
+    Follow,
+    PostLike
 };
 const modelsArray: ModelStatic[] = Object.values(models);
 

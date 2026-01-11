@@ -11,9 +11,11 @@ import {
     AutoIncrement,
     NotNull,
     Table,
-    BelongsTo
+    BelongsTo,
+    BelongsToMany
 } from '@sequelize/core/decorators-legacy';
 import { User } from './user';
+import { PostLike } from './PostLike';
 
 @Table({
     tableName: 'posts'
@@ -37,4 +39,15 @@ export class Post extends Model<InferAttributes<Post>, InferCreationAttributes<P
 
     @BelongsTo(() => User, { foreignKey: 'userId' })
     declare Author?: User;
+
+    @BelongsToMany(() => User, {
+        through: () => PostLike,
+        foreignKey: 'postId',
+        otherKey: 'userId',
+        inverse: { as: 'LikedPosts' }
+    })
+    declare LikedBy?: User[];
+
+    declare addLikedBy: (user: User | User[]) => Promise<void>;
+    declare removeLikedBy: (user: User | User[]) => Promise<void>;
 }
