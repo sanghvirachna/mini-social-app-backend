@@ -2,13 +2,12 @@ import express, { Request, Response } from 'express';
 import { User } from '../models/user';
 import { Follow } from '../models/follow';
 import { authenticate } from '../middlewares/authenticate';
-import { Op } from '@sequelize/core';
+import { Op, WhereOptions } from '@sequelize/core';
 
 const router = express.Router();
 
-// PUT /me/profile
+// PUT /profile
 router.put('/me/profile', authenticate, async (req: Request, res: Response): Promise<any> => {
-    const user = (req as any).user as User;
     const { displayName, headline, bio } = req.body;
 
     if (!displayName || displayName.length === 0 || displayName.length > 40) {
@@ -19,6 +18,12 @@ router.put('/me/profile', authenticate, async (req: Request, res: Response): Pro
     }
     if (bio && bio.length > 160) {
         return res.status(400).json({ error: "bio max 160 chars" });
+    }
+
+    const user = await User.findByPk((req as any).user.id);
+
+    if (!user) {
+        return res.status(404).json({ error: "User not found" });
     }
 
     try {
@@ -32,10 +37,10 @@ router.put('/me/profile', authenticate, async (req: Request, res: Response): Pro
     }
 });
 
-// GET /me/profile
+// GET /profile
 router.get('/me/profile', authenticate, async (req: Request, res: Response) => {
     const user = (req as any).user as User;
-    res.json(user);
+    res.status(200).json(user);
 });
 
 // GET /people?q=<text>
@@ -43,25 +48,28 @@ router.get('/people', authenticate, async (req: Request, res: Response): Promise
     const currentUser = (req as any).user as User;
     const q = req.query.q as string;
 
-    if (!q) return res.json([]);
+    const whereClause: WhereOptions<User> = {
+        id: { [Op.ne]: currentUser.id }
+    };
+
+    if (q && q.length > 0) {
+        whereClause.displayName = { [Op.iLike]: `%${q}%` };
+    }
 
     try {
         const users = await User.findAll({
-            where: {
-                displayName: { [Op.iLike]: `%${q}%` },
-                id: { [Op.ne]: currentUser.id }
-            }
+            where: whereClause
         });
 
         const followings = await Follow.findAll({
             where: { followerId: currentUser.id },
             attributes: ['followingId']
         });
-        const followingIds = new Set(followings.map(f => f.followingId));
+        const followingIds = new Set(followings.map(f => Number(f.followingId)));
 
         const results = users.map(u => ({
             ...u.toJSON(),
-            isFollowing: followingIds.has(u.id)
+            isFollowing: followingIds.has(Number(u.id))
         }));
 
         return res.json(results);
@@ -76,7 +84,7 @@ router.post('/follow/:targetUserId', authenticate, async (req: Request, res: Res
     const currentUser = (req as any).user as User;
     const targetUserId = req.params.targetUserId as string;
 
-    if (targetUserId === currentUser.id) {
+    if (Number(targetUserId) === currentUser.id) {
         return res.status(400).json({ error: "Cannot follow yourself" });
     }
 

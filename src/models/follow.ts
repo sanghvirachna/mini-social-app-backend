@@ -15,11 +15,11 @@ import {
     timestamps: false
 })
 export class Follow extends Model<InferAttributes<Follow>, InferCreationAttributes<Follow>> {
-    @Attribute(DataTypes.STRING)
+    @Attribute(DataTypes.INTEGER)
     @PrimaryKey
-    declare followerId: string;
+    declare followerId: number;
 
-    @Attribute(DataTypes.STRING)
+    @Attribute(DataTypes.INTEGER)
     @PrimaryKey
-    declare followingId: string;
+    declare followingId: number;
 }

@@ -11,7 +11,8 @@ import {
     NotNull,
     Table,
     HasMany,
-    BelongsToMany
+    BelongsToMany,
+    AutoIncrement
 } from '@sequelize/core/decorators-legacy';
 import { Post } from './post';
 import { Follow } from './follow';
@@ -20,9 +21,10 @@ import { Follow } from './follow';
     tableName: 'users'
 })
 export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
-    @Attribute(DataTypes.STRING)
+    @Attribute(DataTypes.INTEGER)
     @PrimaryKey
-    declare id: string;
+    @AutoIncrement
+    declare id: CreationOptional<number>;
 
     @Attribute(DataTypes.STRING)
     @NotNull

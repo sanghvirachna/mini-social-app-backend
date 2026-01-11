@@ -24,9 +24,9 @@ export class Post extends Model<InferAttributes<Post>, InferCreationAttributes<P
     @AutoIncrement
     declare id: CreationOptional<number>;
 
-    @Attribute(DataTypes.STRING)
+    @Attribute(DataTypes.INTEGER)
     @NotNull
-    declare userId: string;
+    declare userId: number;
 
     @Attribute(DataTypes.TEXT)
     @NotNull
@@ -36,5 +36,5 @@ export class Post extends Model<InferAttributes<Post>, InferCreationAttributes<P
     declare createdAt: CreationOptional<Date>;
 
     @BelongsTo(() => User, { foreignKey: 'userId' })
-    declare user?: User;
+    declare Author?: User;
 }

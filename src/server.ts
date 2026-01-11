@@ -5,6 +5,7 @@ import { sequelize } from './db';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import postRoutes from './routes/post.routes';
+import debugRoutes from './routes/debug.routes';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,6 +19,9 @@ app.use(morgan('dev'));
 sequelize.authenticate()
     .then(() => {
         console.log('Database connected.');
+        // Remove automatic sync on start if we want to rely on manual sync, or keep it. 
+        // User asked for a route, presumably to fix issues, so I'll leave the auto-sync alone for now unless it's crashing the app.
+        // Actually, the user's error was "ConnectionRefused", so sync fails anyway.
         return sequelize.sync();
     })
     .catch(err => console.error('DB Connection Error:', err));
@@ -27,6 +31,7 @@ sequelize.authenticate()
 app.use('/auth', authRoutes);
 app.use('/', userRoutes);
 app.use('/', postRoutes);
+app.use('/debug', debugRoutes);
 
 
 // Start server

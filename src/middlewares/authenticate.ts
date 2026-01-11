@@ -11,13 +11,14 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
         const headerVal = authHeader[0] as string;
         token = headerVal?.split(' ')[1] || headerVal;
     }
-
+    console.log(authHeader)
+    console.log(token);
     // In this mock, token === userId
     if (!token) return res.status(401).json({ error: "Unauthorized" });
 
     try {
         const user = await User.findByPk(token);
-        if (!user) return res.status(401).json({ error: "Invalid token" });
+        if (!user) return res.status(401).json({ error: "User not found" });
 
         // Attach user to request (TS requires extending Request, casting for brevity here)
         (req as any).user = user;
